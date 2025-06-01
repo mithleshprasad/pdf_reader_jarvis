@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Jarvis PDF Reader: Upload, read, and get answers from PDFs with AI.">
+    <title>Jarvis PDF Reader - AI Question Answering</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --secondary: #1f2937;
+            --accent: #f97316;
+            --dark: #111827;
+            --light: #f3f4f6;
+        }
+        body {
+            background: linear-gradient(135deg, var(--dark) 0%, var(--secondary) 100%);
+            color: var(--light);
+            font-family: 'Inter', sans-serif;
+        }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        #pdfCanvas {
+            border: 1px solid #374151;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        #jarvisStatus::before {
+            content: '';
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #22c55e;
+            margin-right: 10px;
+        }
+        #jarvisStatus.speaking::before {
+            background-color: var(--accent);
+            box-shadow: 0 0 12px var(--accent);
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        .loader {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .loader.active {
+            display: inline-block;
+        }
+        .chat-message {
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .gradient-text {
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+        <header class="flex justify-between items-center mb-8">
+            <div class="flex items-center space-x-2">
+                <div class="bg-blue-600 p-2 rounded-lg">
+                    <i class="fas fa-robot text-white text-xl"></i>
+                </div>
+                <h1 class="text-2xl font-bold gradient-text">Jarvis PDF Reader</h1>
+            </div>
+            <div class="flex space-x-4">
+                <a href="/pdf_reader_jarvis/indexed" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-2 px-4 rounded-lg transition">
+                    Pure AI Chat <i class="fas fa-comment ml-2"></i>
+                </a>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- PDF Upload and Controls -->
+            <div class="glass-effect rounded-xl p-6">
+                <h2 class="text-xl font-semibold mb-4">PDF Controls</h2>
+                <div class="mb-6">
+                    <label for="pdfInput" class="block text-sm font-medium mb-2">Upload PDF</label>
+                    <input type="file" id="pdfInput" accept=".pdf" class="w-full p-3 bg-gray-800 rounded-lg text-white focus:ring-2 focus:ring-blue-500 transition file:mr-4 file:py-2 file:px-4 file:rounded-md file:bg-blue-600 file:text-white file:border-0 hover:file:bg-blue-700">
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label for="speechRate" class="block text-sm font-medium mb-1">Speech Rate</label>
+                        <div class="flex items-center gap-2">
+                            <input type="range" id="speechRate" min="0.5" max="2" step="0.1" value="1" class="w-full accent-blue-500">
+                            <span id="rateValue" class="text-sm w-10">1.0</span>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="speechPitch" class="block text-sm font-medium mb-1">Speech Pitch</label>
+                        <div class="flex items-center gap-2">
+                            <input type="range" id="speechPitch" min="0" max="2" step="0.1" value="0.9" class="w-full accent-blue-500">
+                            <span id="pitchValue" class="text-sm w-10">0.9</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex flex-wrap gap-3 mb-6">
+                    <button id="readBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition flex items-center gap-2" disabled>
+                        <span>Read Aloud</span>
+                        <span id="readLoader" class="loader"></span>
+                    </button>
+                    <button id="stopBtn" class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition" disabled>Stop</button>
+                    <button id="downloadBtn" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition" disabled>Download Text</button>
+                </div>
+                
+                <div id="jarvisStatus" class="text-green-400 text-sm">Initializing Jarvis...</div>
+                <div id="errorMessage" class="text-red-400 text-sm mt-2 hidden"></div>
+            </div>
+
+            <!-- PDF Preview -->
+            <div class="glass-effect rounded-xl p-6">
+                <h2 class="text-xl font-semibold mb-4">PDF Preview</h2>
+                <div class="flex justify-between items-center mb-4">
+                    <div class="flex gap-2">
+                        <button id="prevPage" class="bg-gray-700 hover:bg-gray-600 text-white py-2 px-3 rounded-lg transition" disabled>
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <button id="nextPage" class="bg-gray-700 hover:bg-gray-600 text-white py-2 px-3 rounded-lg transition" disabled>
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                    <div class="text-sm">
+                        Page <span id="currentPage">1</span> of <span id="totalPages">1</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button id="zoomOut" class="bg-gray-700 hover:bg-gray-600 text-white py-2 px-3 rounded-lg transition">
+                            <i class="fas fa-search-minus"></i>
+                        </button>
+                        <span id="zoomValue" class="text-sm w-10">1.5x</span>
+                        <button id="zoomIn" class="bg-gray-700 hover:bg-gray-600 text-white py-2 px-3 rounded-lg transition">
+                            <i class="fas fa-search-plus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="relative">
+                    <canvas id="pdfCanvas" class="w-full"></canvas>
+                    <div id="pdfLoader" class="loader absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PDF Text and Q&A Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+            <!-- Extracted Text -->
+            <div class="glass-effect rounded-xl p-6 h-full">
+                <h2 class="text-xl font-semibold mb-4">Extracted Text</h2>
+                <textarea id="pdfText" class="w-full h-64 bg-gray-800 rounded-lg p-4 text-white focus:ring-2 focus:ring-blue-500 resize-none" readonly></textarea>
+            </div>
+
+            <!-- Q&A Chat Interface -->
+            <div class="glass-effect rounded-xl p-6 flex flex-col h-full">
+                <h2 class="text-xl font-semibold mb-4">Ask Questions About the PDF</h2>
+                <div id="chatContainer" class="flex-1 overflow-y-auto mb-4 space-y-4 max-h-64">
+                    <div class="chat-message bg-gray-800 rounded-lg p-4">
+                        <div class="font-semibold text-blue-400 flex items-center gap-2">
+                            <i class="fas fa-robot"></i> Jarvis
+                        </div>
+                        <p class="mt-1">Hello! Upload a PDF and ask me anything about its content. I'll find the relevant information for you.</p>
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <input type="text" id="questionInput" placeholder="Ask a question about the PDF..." class="flex-1 bg-gray-800 rounded-lg p-3 text-white focus:ring-2 focus:ring-blue-500" disabled>
+                    <button id="askBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition flex items-center gap-2" disabled>
+                        <span>Ask</span>
+                        <span id="askLoader" class="loader"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize PDF.js
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js';
+
+        // DOM Elements
+        const elements = {
+            pdfInput: document.getElementById('pdfInput'),
+            pdfCanvas: document.getElementById('pdfCanvas'),
+            pdfText: document.getElementById('pdfText'),
+            readBtn: document.getElementById('readBtn'),
+            stopBtn: document.getElementById('stopBtn'),
+            downloadBtn: document.getElementById('downloadBtn'),
+            prevPage: document.getElementById('prevPage'),
+            nextPage: document.getElementById('nextPage'),
+            zoomIn: document.getElementById('zoomIn'),
+            zoomOut: document.getElementById('zoomOut'),
+            zoomValue: document.getElementById('zoomValue'),
+            currentPage: document.getElementById('currentPage'),
+            totalPages: document.getElementById('totalPages'),
+            speechRate: document.getElementById('speechRate'),
+            rateValue: document.getElementById('rateValue'),
+            speechPitch: document.getElementById('speechPitch'),
+            pitchValue: document.getElementById('pitchValue'),
+            jarvisStatus: document.getElementById('jarvisStatus'),
+            errorMessage: document.getElementById('errorMessage'),
+            pdfLoader: document.getElementById('pdfLoader'),
+            readLoader: document.getElementById('readLoader'),
+            chatContainer: document.getElementById('chatContainer'),
+            questionInput: document.getElementById('questionInput'),
+            askBtn: document.getElementById('askBtn'),
+            askLoader: document.getElementById('askLoader')
+        };
+
+        // App State
+        const state = {
+            pdfDoc: null,
+            currentPageNum: 1,
+            zoomLevel: 1.5,
+            fullText: '',
+            synth: window.speechSynthesis,
+            utterance: null
+        };
+
+        // Initialize UI
+        function initUI() {
+            // Set initial values
+            elements.zoomValue.textContent = `${state.zoomLevel}x`;
+            
+            // Event listeners for sliders
+            elements.speechRate.addEventListener('input', () => {
+                elements.rateValue.textContent = parseFloat(elements.speechRate.value).toFixed(1);
+            });
+            
+            elements.speechPitch.addEventListener('input', () => {
+                elements.pitchValue.textContent = parseFloat(elements.speechPitch.value).toFixed(1);
+            });
+            
+            // Zoom controls
+            elements.zoomIn.addEventListener('click', () => {
+                state.zoomLevel = Math.min(state.zoomLevel + 0.1, 2.0);
+                elements.zoomValue.textContent = `${state.zoomLevel.toFixed(1)}x`;
+                if (state.pdfDoc) renderPage(state.currentPageNum);
+            });
+            
+            elements.zoomOut.addEventListener('click', () => {
+                state.zoomLevel = Math.max(state.zoomLevel - 0.1, 0.5);
+                elements.zoomValue.textContent = `${state.zoomLevel.toFixed(1)}x`;
+                if (state.pdfDoc) renderPage(state.currentPageNum);
+            });
+            
+            // PDF Upload
+            elements.pdfInput.addEventListener('change', handlePDFUpload);
+            
+            // Page Navigation
+            elements.prevPage.addEventListener('click', () => {
+                if (state.pdfDoc && state.currentPageNum > 1) {
+                    state.currentPageNum--;
+                    renderPage(state.currentPageNum);
+                }
+            });
+            
+            elements.nextPage.addEventListener('click', () => {
+                if (state.pdfDoc && state.currentPageNum < state.pdfDoc.numPages) {
+                    state.currentPageNum++;
+                    renderPage(state.currentPageNum);
+                }
+            });
+            
+            // Read Aloud
+            elements.readBtn.addEventListener('click', readAloud);
+            elements.stopBtn.addEventListener('click', stopReading);
+            
+            // Download Text
+            elements.downloadBtn.addEventListener('click', downloadText);
+            
+            // Q&A
+            elements.askBtn.addEventListener('click', handleQuestion);
+            elements.questionInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') handleQuestion();
+            });
+            
+            // Check if voices are loaded
+            state.synth.onvoiceschanged = () => {
+                const voices = state.synth.getVoices();
+                if (voices.length > 0) {
+                    elements.jarvisStatus.textContent = 'Jarvis is ready';
+                }
+            };
+        }
+
+        // Handle PDF Upload
+        async function handlePDFUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            if (!file.type.includes('pdf')) {
+                showError('Please upload a valid PDF file.');
+                return;
+            }
+
+            try {
+                elements.pdfLoader.classList.add('active');
+                const arrayBuffer = await file.arrayBuffer();
+                state.pdfDoc = await pdfjsLib.getDocument(arrayBuffer).promise;
+                
+                // Update page info
+                elements.totalPages.textContent = state.pdfDoc.numPages;
+                state.currentPageNum = 1;
+                await renderPage(state.currentPageNum);
+                
+                // Extract text
+                state.fullText = '';
+                for (let i = 1; i <= state.pdfDoc.numPages; i++) {
+                    const page = await state.pdfDoc.getPage(i);
+                    const textContent = await page.getTextContent();
+                    state.fullText += textContent.items.map(item => item.str).join(' ') + '\n';
+                }
+                
+                elements.pdfText.value = state.fullText;
+                enableControls();
+                elements.jarvisStatus.textContent = 'PDF loaded. Ready to read or answer questions.';
+                elements.questionInput.disabled = false;
+                elements.askBtn.disabled = false;
+                
+                // Add welcome message to chat
+                addChatMessage('Jarvis', 'I\'ve processed the PDF. You can now ask me questions about its content.', 'bot');
+                
+            } catch (error) {
+                showError('Error loading PDF: ' + error.message);
+            } finally {
+                elements.pdfLoader.classList.remove('active');
+            }
+        }
+
+        // Render PDF Page
+        async function renderPage(pageNum) {
+            try {
+                elements.pdfLoader.classList.add('active');
+                const page = await state.pdfDoc.getPage(pageNum);
+                const viewport = page.getViewport({ scale: state.zoomLevel });
+                
+                elements.pdfCanvas.height = viewport.height;
+                elements.pdfCanvas.width = viewport.width;
+                
+                const context = elements.pdfCanvas.getContext('2d');
+                await page.render({ 
+                    canvasContext: context, 
+                    viewport 
+                }).promise;
+                
+                elements.currentPage.textContent = pageNum;
+                elements.prevPage.disabled = pageNum === 1;
+                elements.nextPage.disabled = pageNum === state.pdfDoc.numPages;
+                
+            } catch (error) {
+                showError('Error rendering page: ' + error.message);
+            } finally {
+                elements.pdfLoader.classList.remove('active');
+            }
+        }
+
+        // Enable controls after PDF is loaded
+        function enableControls() {
+            elements.readBtn.disabled = false;
+            elements.downloadBtn.disabled = false;
+            elements.prevPage.disabled = state.currentPageNum === 1;
+            elements.nextPage.disabled = state.currentPageNum === state.pdfDoc.numPages;
+        }
+
+        // Read text aloud
+        function readAloud() {
+            if (elements.pdfText.value && !state.synth.speaking) {
+                elements.readLoader.classList.add('active');
+                state.utterance = new SpeechSynthesisUtterance(elements.pdfText.value);
+                state.utterance.rate = parseFloat(elements.speechRate.value);
+                state.utterance.pitch = parseFloat(elements.speechPitch.value);
+                state.utterance.volume = 1.0;
+
+                const voices = state.synth.getVoices();
+                const jarvisVoice = voices.find(voice => 
+                    voice.name.includes('Male') || 
+                    voice.name.includes('Daniel') || 
+                    voice.name.includes('Google US English')
+                );
+                
+                if (jarvisVoice) state.utterance.voice = jarvisVoice;
+                else showError('Jarvis-like voice not found. Using default voice.');
+
+                state.utterance.onstart = () => {
+                    elements.jarvisStatus.textContent = 'Jarvis is reading...';
+                    elements.jarvisStatus.classList.add('speaking');
+                    elements.readLoader.classList.remove('active');
+                    elements.stopBtn.disabled = false;
+                };
+                
+                state.utterance.onend = () => {
+                    elements.jarvisStatus.textContent = 'Jarvis is ready';
+                    elements.jarvisStatus.classList.remove('speaking');
+                    elements.stopBtn.disabled = true;
+                };
+                
+                state.utterance.onerror = (event) => {
+                    showError('Speech error: ' + event.error);
+                    elements.jarvisStatus.classList.remove('speaking');
+                    elements.stopBtn.disabled = true;
+                };
+                
+                state.synth.speak(state.utterance);
+            }
+        }
+
+        // Stop reading
+        function stopReading() {
+            if (state.synth.speaking) {
+                state.synth.cancel();
+                elements.jarvisStatus.textContent = 'Jarvis is ready';
+                elements.jarvisStatus.classList.remove('speaking');
+                elements.stopBtn.disabled = true;
+            }
+        }
+
+        // Download extracted text
+        function downloadText() {
+            if (elements.pdfText.value) {
+                const blob = new Blob([elements.pdfText.value], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'extracted_text.txt';
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+        }
+
+        // Handle PDF questions
+        async function handleQuestion() {
+            const question = elements.questionInput.value.trim();
+            if (!question || !state.fullText) return;
+            
+            elements.askLoader.classList.add('active');
+            elements.askBtn.disabled = true;
+            elements.questionInput.disabled = true;
+            
+            // Add user question to chat
+            addChatMessage('You', question, 'user');
+            elements.questionInput.value = '';
+            
+            try {
+                // Simple search for relevant text (in a real app, you'd use more sophisticated NLP)
+                const answer = findAnswerInText(question, state.fullText);
+                
+                // Simulate processing delay
+                setTimeout(() => {
+                    addChatMessage('Jarvis', answer, 'bot');
+                    
+                    // Speak the answer
+                    if (state.synth && !state.synth.speaking) {
+                        const utterance = new SpeechSynthesisUtterance(answer);
+                        utterance.rate = parseFloat(elements.speechRate.value);
+                        utterance.pitch = parseFloat(elements.speechPitch.value);
+                        state.synth.speak(utterance);
+                    }
+                    
+                    elements.askLoader.classList.remove('active');
+                    elements.askBtn.disabled = false;
+                    elements.questionInput.disabled = false;
+                    elements.questionInput.focus();
+                }, 1000);
+                
+            } catch (error) {
+                showError('Error processing question: ' + error.message);
+                elements.askLoader.classList.remove('active');
+                elements.askBtn.disabled = false;
+                elements.questionInput.disabled = false;
+            }
+        }
+
+        // Simple text search for answers (would be replaced with AI in production)
+        function findAnswerInText(question, text) {
+            // Convert to lowercase for case-insensitive search
+            const q = question.toLowerCase();
+            const paragraphs = text.split('\n').filter(p => p.trim().length > 0);
+            
+            // Try to find the most relevant paragraph
+            for (const paragraph of paragraphs) {
+                const pLower = paragraph.toLowerCase();
+                
+                // Check for direct matches of question words
+                const questionWords = q.split(/\s+/);
+                const matchCount = questionWords.filter(word => 
+                    word.length > 3 && pLower.includes(word)
+                ).length;
+                
+                // If we found a paragraph with several matching words
+                if (matchCount >= Math.min(2, questionWords.length)) {
+                    return `Based on the PDF content: ${paragraph.trim()}`;
+                }
+            }
+            
+            // If no direct matches, look for numbers/dates if asked about them
+            if (/\b\d{4}\b/.test(q) || q.includes('year') || q.includes('date')) {
+                const yearMatch = text.match(/\b\d{4}\b/);
+                if (yearMatch) {
+                    return `The PDF mentions the year ${yearMatch[0]} in relation to this topic.`;
+                }
+            }
+            
+            // Fallback response
+            return "I found some relevant information in the PDF: " + 
+                   paragraphs.find(p => p.length > 50 && p.length < 300) || 
+                   "I couldn't find a specific answer to your question in the PDF, but it does contain relevant information on this topic.";
+        }
+
+        // Add message to chat
+        function addChatMessage(sender, message, type) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message bg-gray-800 rounded-lg p-4 ${type === 'user' ? 'bg-blue-900/30' : ''}`;
+            messageDiv.innerHTML = `
+                <div class="font-semibold ${type === 'user' ? 'text-blue-400' : 'text-purple-400'} flex items-center gap-2">
+                    ${type === 'user' ? '<i class="fas fa-user"></i>' : '<i class="fas fa-robot"></i>'} 
+                    ${sender}
+                </div>
+                <p class="mt-1">${message}</p>
+            `;
+            elements.chatContainer.appendChild(messageDiv);
+            elements.chatContainer.scrollTop = elements.chatContainer.scrollHeight;
+        }
+
+        // Show error message
+        function showError(msg) {
+            elements.errorMessage.textContent = msg;
+            elements.errorMessage.classList.remove('hidden');
+            setTimeout(() => elements.errorMessage.classList.add('hidden'), 5000);
+        }
+
+        // Initialize the app
+        initUI();
+    </script>
+</body>
+</html>
