@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pure JS AI Agent</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app-container">
+    <header>
+      <h1>JavaScript AI Agent</h1>
+      <p>Built with pure JavaScript - no external dependencies</p>
+    </header>
+    
+    <div class="chat-container">
+      <div id="chat-log" class="chat-log"></div>
+      
+      <div class="input-area">
+        <input type="text" id="user-input" placeholder="Type your message..." autofocus>
+        <button id="send-btn">Send</button>
+      </div>
+    </div>
+    
+    <div class="agent-controls">
+      <button id="train-btn">Train Agent</button>
+      <button id="reset-btn">Reset Memory</button>
+      <button id="save-btn">Save Knowledge</button>
+      <button id="load-btn">Load Knowledge</button>
+    </div>
+  </div>
+
+  <script src="js/ai-agent.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
