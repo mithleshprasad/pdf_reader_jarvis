@@ -13,12 +13,12 @@ An intelligent PDF reader with text-to-speech capabilities featuring a Jarvis-li
 
 ## 🚀 Demo
 
-Try the live demo: [Jarvis PDF Reader Demo](https://mithleshprasad.github.io/jarvis-pdf-reader)
+Try the live demo: [Jarvis PDF Reader Demo]([https://mithleshprasad.github.io/pdf_reader_jarvis/])
 
 ## 🛠️ Installation
 
 ### Option 1: Use directly from GitHub Pages
-Simply visit the [live demo](https://mithleshprasad.github.io/jarvis-pdf-reader) - no installation needed!
+Simply visit the [live demo](https://mithleshprasad.github.io/pdf_reader_jarvis/) - no installation needed!
 
 ### Option 2: Local Development
 1. Clone the repository:
@@ -95,9 +95,7 @@ For questions or support, please contact:
 
 - Project Link: [https://github.com/mithleshprasad/jarvis-pdf-reader](https://github.com/mithleshprasad/jarvis-pdf-reader)
 
----
 
 <p align="center">
   Made with ❤️ and JavaScript
 </p>
-```
