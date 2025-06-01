@@ -1,10 +1,8 @@
 # Jarvis PDF Reader - AI-Powered Document Assistant
 
-![Jarvis PDF Reader Demo](https://i.imgur.com/JZv9XgH.png)
-
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![GitHub Stars](https://img.shields.io/github/stars/yourusername/jarvis-pdf-reader?style=social)](https://github.com/yourusername/jarvis-pdf-reader/stargazers)
-[![GitHub Forks](https://img.shields.io/github/forks/yourusername/jarvis-pdf-reader?style=social)](https://github.com/yourusername/jarvis-pdf-reader/network/members)
+[![GitHub Stars](https://img.shields.io/github/stars/mithleshprasad/jarvis-pdf-reader?style=social)](https://github.com/mithleshprasad/jarvis-pdf-reader/stargazers)
+[![GitHub Forks](https://img.shields.io/github/forks/mithleshprasad/jarvis-pdf-reader?style=social)](https://github.com/mithleshprasad/jarvis-pdf-reader/network/members)
 
 An intelligent PDF reader with text-to-speech capabilities featuring a Jarvis-like AI voice. Upload, read, extract, and interact with your PDF documents using advanced AI technology.
 
@@ -19,19 +17,17 @@ An intelligent PDF reader with text-to-speech capabilities featuring a Jarvis-li
 
 ## 🚀 Demo
 
-Try the live demo: [Jarvis PDF Reader Demo](https://yourusername.github.io/jarvis-pdf-reader)
-
-![Demo Screenshot](https://i.imgur.com/xyz1234.png)
+Try the live demo: [Jarvis PDF Reader Demo](https://mithleshprasad.github.io/jarvis-pdf-reader)
 
 ## 🛠️ Installation
 
 ### Option 1: Use directly from GitHub Pages
-Simply visit the [live demo](https://yourusername.github.io/jarvis-pdf-reader) - no installation needed!
+Simply visit the [live demo](https://mithleshprasad.github.io/jarvis-pdf-reader) - no installation needed!
 
 ### Option 2: Local Development
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/jarvis-pdf-reader.git
+   git clone https://github.com/mithleshprasad/jarvis-pdf-reader.git
    ```
 2. Navigate to the project directory:
    ```bash
@@ -101,7 +97,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 For questions or support, please contact:
 
-- Project Link: [https://github.com/yourusername/jarvis-pdf-reader](https://github.com/yourusername/jarvis-pdf-reader)
+- Project Link: [https://github.com/mithleshprasad/jarvis-pdf-reader](https://github.com/mithleshprasad/jarvis-pdf-reader)
 
 ---
 
