@@ -1,9 +1,5 @@
 # Jarvis PDF Reader - AI-Powered Document Assistant
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![GitHub Stars](https://img.shields.io/github/stars/mithleshprasad/jarvis-pdf-reader?style=social)](https://github.com/mithleshprasad/jarvis-pdf-reader/stargazers)
-[![GitHub Forks](https://img.shields.io/github/forks/mithleshprasad/jarvis-pdf-reader?style=social)](https://github.com/mithleshprasad/jarvis-pdf-reader/network/members)
-
 An intelligent PDF reader with text-to-speech capabilities featuring a Jarvis-like AI voice. Upload, read, extract, and interact with your PDF documents using advanced AI technology.
 
 ## ✨ Features
