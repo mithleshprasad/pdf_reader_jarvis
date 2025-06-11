@@ -29,6 +29,9 @@
       </select>
       <button id="custom-text-btn">Custom Text</button>
       <button id="generate-report">Generate Report Card</button>
+      <button id="tutorial-btn">Tutorial</button>
+  <button id="learn-typing-btn">Learn Typing</button>
+
     </div>
     <div class="stats">
       <div>Time: <span id="timer">60</span>s</div>
@@ -37,15 +40,26 @@
       <div>CPM: <span id="cpm">0</span></div>
       <div>Errors: <span id="errors">0</span></div>
     </div>
+    <div class="tutorial-section" id="typing-lessons" style="display:none;">
+  <h2>Typing Lessons</h2>
+  <div id="lesson-content"></div>
+  <progress id="lesson-progress" value="0" max="100"></progress>
+  <div class="lesson-buttons">
+    <button id="prev-lesson">Previous</button>
+    <button id="next-lesson">Next</button>
+    <button id="start-lesson-practice">Practice</button>
+  </div>
+  <div id="lesson-feedback" class="feedback"></div>
+</div>
     <div id="text-display"></div>
     <textarea id="text-input" placeholder="Start typing here..." disabled></textarea>
     <button id="start-btn">Start Test</button>
     <div class="results" id="results"></div>
     <div class="progress-chart" id="progress-chart">
-      <canvas id="wpm-chart" width="400" height="200"></canvas>
+      <canvas id="wpm-chart" width="400" height="200" ></canvas>
     </div>
     <div class="keystroke-heatmap" id="keystroke-heatmap">
-      <canvas id="heatmap-canvas" width="400" height="200"></canvas>
+      <!-- <canvas id="heatmap-canvas" width="400" height="200"></canvas> -->
     </div>
     <div class="report-card" id="report-card"></div>
   </div>
@@ -56,7 +70,24 @@
       <button id="save-custom-text">Save</button>
       <button id="cancel-custom-text">Cancel</button>
     </div>
+
   </div>
+
+
+<div class="tutorial-overlay" id="tutorial-overlay">
+  <div class="tutorial-content">
+    <h2 id="tutorial-title">Welcome to the Typing Test!</h2>
+    <p id="tutorial-text">This tutorial will guide you through the features.</p>
+    <div class="tutorial-btns">
+      <button id="prev-step">Previous</button>
+      <button id="next-step">Next</button>
+      <button id="close-tutorial">Close</button>
+    </div>
+  </div>
+</div>
+
+
+<audio id="finger-audio" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="typing_test.js"></script>

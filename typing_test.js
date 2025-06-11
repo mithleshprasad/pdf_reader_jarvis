@@ -168,8 +168,8 @@ const sampleTexts = {
           datasets: [{
             label: 'WPM Over Time',
             data: history.map(entry => entry.wpm),
-            borderColor: 'var(--primary)',
-            backgroundColor: 'rgba(96, 165, 250, 0.2)',
+            borderColor: 'white',
+            backgroundColor: 'rgba(181, 197, 218, 0.2)',
             fill: true,
             tension: 0.4
           }]
@@ -181,14 +181,14 @@ const sampleTexts = {
               title: { 
                 display: true, 
                 text: 'WPM', 
-                color: 'var(--text-color)' 
+                color: 'white' 
               } 
             },
             x: { 
               title: { 
                 display: true, 
                 text: 'Test Date', 
-                color: 'var(--text-color)' 
+                color: 'white' 
               } 
             }
           }
@@ -334,3 +334,190 @@ const sampleTexts = {
     });
 
     generateReport.addEventListener('click', generateReportCard);
+
+    const tutorialBtn = document.getElementById('tutorial-btn');
+const tutorialOverlay = document.getElementById('tutorial-overlay');
+const tutorialTitle = document.getElementById('tutorial-title');
+const tutorialText = document.getElementById('tutorial-text');
+const prevStep = document.getElementById('prev-step');
+const nextStep = document.getElementById('next-step');
+const closeTutorial = document.getElementById('close-tutorial');
+
+const tutorialSteps = [
+  {
+    title: 'Welcome to the Typing Test!',
+    text: 'This app helps improve your typing speed and accuracy with different difficulty levels.'
+  },
+  {
+    title: 'Select Difficulty & Time',
+    text: 'Choose a difficulty and time limit to begin the test. Custom text is also available.'
+  },
+  {
+    title: 'Start Typing',
+    text: 'Click "Start Test" and begin typing in the input area. Your stats will be updated in real-time.'
+  },
+  {
+    title: 'Review Results',
+    text: 'Once the test ends, you’ll see your WPM, Accuracy, CPM, and Errors.'
+  },
+  {
+    title: 'Progress & Heatmap',
+    text: 'Track your performance over time and see which keys you press most often.'
+  },
+  {
+    title: 'Generate Report Card',
+    text: 'Click "Generate Report Card" to get a summary of your latest and average performance.'
+  }
+];
+
+let currentStep = 0;
+
+function showTutorialStep(step) {
+  const data = tutorialSteps[step];
+  tutorialTitle.textContent = data.title;
+  tutorialText.textContent = data.text;
+  tutorialOverlay.style.display = 'flex';
+}
+
+tutorialBtn.addEventListener('click', () => {
+  currentStep = 0;
+  showTutorialStep(currentStep);
+});
+
+nextStep.addEventListener('click', () => {
+  if (currentStep < tutorialSteps.length - 1) {
+    currentStep++;
+    showTutorialStep(currentStep);
+  }
+});
+
+prevStep.addEventListener('click', () => {
+  if (currentStep > 0) {
+    currentStep--;
+    showTutorialStep(currentStep);
+  }
+});
+
+closeTutorial.addEventListener('click', () => {
+  tutorialOverlay.style.display = 'none';
+});
+
+
+///////////////////////////
+const lessons = [
+  {
+    title: 'Lesson 1: Home Row',
+    content: 'Place your fingers on A, S, D, F (left) and J, K, L, ; (right).',
+    practice: 'asdf jkl; asdf jkl;',
+    keys: ['a','s','d','f','j','k','l',';']
+  },
+  {
+    title: 'Lesson 2: Top Row',
+    content: 'Move your fingers to Q, W, E, R, T and Y, U, I, O, P.',
+    practice: 'qwer uiop qwer uiop',
+    keys: ['q','w','e','r','u','i','o','p']
+  },
+  {
+    title: 'Lesson 3: Bottom Row',
+    content: 'Now try Z, X, C, V, B and N, M.',
+    practice: 'zxcv nm,. zxcv nm,.',
+    keys: ['z','x','c','v','n','m']
+  }
+];
+
+let currentLesson = 0;
+let lessonsCompleted = JSON.parse(localStorage.getItem('lessonsCompleted')) || [];
+
+const lessonContent = document.getElementById('lesson-content');
+const typingLessons = document.getElementById('typing-lessons');
+const learnTypingBtn = document.getElementById('learn-typing-btn');
+const prevLessonBtn = document.getElementById('prev-lesson');
+const nextLessonBtn = document.getElementById('next-lesson');
+const startLessonPracticeBtn = document.getElementById('start-lesson-practice');
+const lessonProgress = document.getElementById('lesson-progress');
+const lessonFeedback = document.getElementById('lesson-feedback');
+const fingerAudio = document.getElementById('finger-audio');
+
+function showLesson(index) {
+  const lesson = lessons[index];
+  lessonContent.innerHTML = `
+    <h3>${lesson.title}</h3>
+    <p>${lesson.content}</p>
+    <p><strong>Practice Text:</strong> ${lesson.practice}</p>
+  `;
+  typingLessons.style.display = 'block';
+  updateLessonProgress();
+}
+
+function updateLessonProgress() {
+  const percent = Math.round((lessonsCompleted.length / lessons.length) * 100);
+  lessonProgress.value = percent;
+  lessonProgress.title = `${percent}% completed`;
+}
+
+learnTypingBtn.addEventListener('click', () => {
+  currentLesson = 0;
+  showLesson(currentLesson);
+});
+
+nextLessonBtn.addEventListener('click', () => {
+  if (currentLesson < lessons.length - 1) {
+    currentLesson++;
+    showLesson(currentLesson);
+  }
+});
+
+prevLessonBtn.addEventListener('click', () => {
+  if (currentLesson > 0) {
+    currentLesson--;
+    showLesson(currentLesson);
+  }
+});
+
+startLessonPracticeBtn.addEventListener('click', () => {
+  const lesson = lessons[currentLesson];
+  customTextInput.value = lesson.practice;
+  customTextModal.style.display = 'none';
+  resetTest();
+  startTest();
+});
+
+// 🎧 Audio cues and feedback
+textInput.addEventListener('keydown', (e) => {
+  if (!testActive) return;
+  const lessonKeys = lessons[currentLesson]?.keys || [];
+  if (lessonKeys.includes(e.key.toLowerCase())) {
+    fingerAudio.currentTime = 0;
+    fingerAudio.play();
+  }
+});
+
+// 🧠 AI Feedback after lesson
+function showLessonFeedback(wpm, accuracy) {
+  let feedback = "Great job!";
+  if (wpm < 20 || accuracy < 80) {
+    feedback = "Focus on accuracy first. Slow down a bit.";
+  } else if (wpm >= 30 && accuracy > 90) {
+    feedback = "You're improving fast. Keep it up!";
+  } else if (wpm >= 50) {
+    feedback = "Excellent speed and precision!";
+  }
+
+  lessonFeedback.textContent = feedback;
+  if (!lessonsCompleted.includes(currentLesson)) {
+    lessonsCompleted.push(currentLesson);
+    localStorage.setItem('lessonsCompleted', JSON.stringify(lessonsCompleted));
+  }
+  updateLessonProgress();
+}
+
+// Hook into endTest to give AI feedback
+const originalEndTest = endTest;
+endTest = function () {
+  originalEndTest();
+  if (typingLessons.style.display === 'block') {
+    const wpm = parseInt(wpmDisplay.textContent);
+    const accuracy = parseInt(accuracyDisplay.textContent);
+    showLessonFeedback(wpm, accuracy);
+  }
+}
