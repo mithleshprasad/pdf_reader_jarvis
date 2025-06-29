@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notepad</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        textarea {
+            resize: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-2xl bg-white rounded-lg shadow-lg p-6">
+        <h1 class="text-2xl font-bold text-gray-800 mb-4 text-center">Notepad</h1>
+        <textarea id="noteContent" class="w-full h-96 p-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Write your notes here..."></textarea>
+        <div class="flex justify-between mt-4 space-x-2">
+            <button id="saveBtn" class="flex-1 bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition">Save Note</button>
+            <button id="clearBtn" class="flex-1 bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 transition">Clear Note</button>
+            <button id="printBtn" class="flex-1 bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition">Print as PDF</button>
+        </div>
+        <p id="status" class="text-sm text-gray-600 mt-2 text-center"></p>
+    </div>
+
+    <script>
+        const noteContent = document.getElementById('noteContent');
+        const saveBtn = document.getElementById('saveBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const printBtn = document.getElementById('printBtn');
+        const status = document.getElementById('status');
+
+        // Load saved note from localStorage
+        window.onload = () => {
+            const savedNote = localStorage.getItem('note');
+            if (savedNote) {
+                noteContent.value = savedNote;
+            }
+        };
+
+        // Save note to localStorage
+        saveBtn.addEventListener('click', () => {
+            const content = noteContent.value;
+            localStorage.setItem('note', content);
+            status.textContent = 'Note saved successfully!';
+            setTimeout(() => status.textContent = '', 2000);
+        });
+
+        // Clear note
+        clearBtn.addEventListener('click', () => {
+            noteContent.value = '';
+            localStorage.removeItem('note');
+            status.textContent = 'Note cleared!';
+            setTimeout(() => status.textContent = '', 2000);
+        });
+
+        // Generate and download PDF
+        printBtn.addEventListener('click', () => {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const content = noteContent.value || 'No content';
+            const lines = doc.splitTextToSize(content, 180);
+            doc.text(lines, 10, 10);
+            doc.save('note.pdf');
+            status.textContent = 'PDF downloaded!';
+            setTimeout(() => status.textContent = '', 2000);
+        });
+    </script>
+</body>
+</html>
